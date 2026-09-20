@@ -1,0 +1,26 @@
+[
+    {
+        "codigo": "P001",
+        "nombre": "Hamburguesa Clásica",
+        "precio": 5.9,
+        "stock": 20
+    },
+    {
+        "codigo": "P003",
+        "nombre": "Limonada",
+        "precio": 2.0,
+        "stock": 23
+    },
+    {
+        "codigo": "P004",
+        "nombre": "pizza familiar",
+        "precio": 14.0,
+        "stock": 0
+    },
+    {
+        "codigo": "P007",
+        "nombre": "coca cola",
+        "precio": 1.0,
+        "stock": 25
+    }
+]
