@@ -1,6 +1,9 @@
+
 from modelos.producto import Producto
 from modelos.usuario import Usuario
 from modelos.venta import Venta
+
+from datetime import datetime
 
 
 class RestauranteServicio:
@@ -22,7 +25,7 @@ class RestauranteServicio:
             if (
                 str(item.get("usuario", "")).strip() == usuario
                 and
-                str(item.get("contrasena", "")).strip()== contrasena
+                str(item.get("contrasena", "")).strip() == contrasena
             ):
                 return Usuario.desde_diccionario(item)
 
@@ -313,6 +316,7 @@ class RestauranteServicio:
             raise ValueError(
                 "El producto seleccionado no existe."
             )
+
         if cantidad > producto.stock:
             raise ValueError(
                 f"Stock insuficiente. "
@@ -340,14 +344,24 @@ class RestauranteServicio:
             productos
         )
 
-        venta = Venta(
-            usuario_id,
-            producto_codigo,
-            cantidad
-        )
-
         ventas = self.archivo_servicio.leer(
             "ventas.json"
+        )
+
+        identificador = f"V{len(ventas) + 1:03d}"
+
+        from datetime import datetime
+
+        fecha = datetime.now().strftime(
+            "%Y-%m-%d"
+        )
+
+        venta = Venta(
+            identificador,
+            usuario_id,
+            producto.nombre,
+            cantidad,
+            fecha
         )
 
         ventas.append(

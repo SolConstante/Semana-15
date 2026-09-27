@@ -1,27 +1,16 @@
 [
     {
-        "usuario_id": "1",
-        "producto_codigo": "P003",
-        "cantidad": 1
+        "identificador": "V001",
+        "usuario_id": "5",
+        "producto_nombre": "pizza con peperoni",
+        "cantidad": 2,
+        "fecha": "2026-09-27"
     },
     {
-        "usuario_id": "1",
-        "producto_codigo": "P004",
-        "cantidad": 1
-    },
-    {
-        "usuario_id": "1",
-        "producto_codigo": "P003",
-        "cantidad": 1
-    },
-    {
-        "usuario_id": "1",
-        "producto_codigo": "P004",
-        "cantidad": 1
-    },
-    {
-        "usuario_id": "1",
-        "producto_codigo": "P007",
-        "cantidad": 5
+        "identificador": "V002",
+        "usuario_id": "4",
+        "producto_nombre": "pastel de chocolate",
+        "cantidad": 1,
+        "fecha": "2026-09-27"
     }
 ]

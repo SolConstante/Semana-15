@@ -6,21 +6,45 @@
         "stock": 20
     },
     {
+        "codigo": "P002",
+        "nombre": "pastel de chocolate",
+        "precio": 3.5,
+        "stock": 9
+    },
+    {
         "codigo": "P003",
         "nombre": "Limonada",
         "precio": 2.0,
-        "stock": 23
+        "stock": 22
     },
     {
         "codigo": "P004",
-        "nombre": "pizza familiar",
+        "nombre": "pizza",
         "precio": 14.0,
-        "stock": 0
+        "stock": 12
+    },
+    {
+        "codigo": "P005",
+        "nombre": "Hamburguesa con queso",
+        "precio": 7.25,
+        "stock": 11
+    },
+    {
+        "codigo": "P006",
+        "nombre": "Hamburguesa basica",
+        "precio": 4.5,
+        "stock": 15
     },
     {
         "codigo": "P007",
         "nombre": "coca cola",
         "precio": 1.0,
-        "stock": 25
+        "stock": 24
+    },
+    {
+        "codigo": "11",
+        "nombre": "pizza con peperoni",
+        "precio": 10.0,
+        "stock": 4
     }
 ]

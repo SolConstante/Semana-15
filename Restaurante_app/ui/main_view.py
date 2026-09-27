@@ -25,6 +25,8 @@ class MainView(tk.Frame):
         self.tabla_usuarios = None
 
         self.tabla_ventas = None
+        self.venta_usuario_var = tk.StringVar()
+        self.usuarios_venta = {}
         self.venta_producto_var = tk.StringVar()
         self.venta_cantidad_var = tk.StringVar(value="1")
         self.productos_venta = {}
@@ -154,18 +156,23 @@ class MainView(tk.Frame):
 
         ruta_base = Path(__file__).resolve().parent.parent
 
-        ruta_icono = (
-            ruta_base
-            / "assets"
-            / "icons"
-            / nombre_archivo
-        )
+        ruta_icono = ruta_base / "assets" / nombre_archivo
 
         if not ruta_icono.exists():
             return None
 
         try:
             icono = tk.PhotoImage( file=str(ruta_icono) )
+
+            # Keep the supplied PNGs compact inside the existing menu buttons.
+            factor = max(
+                1,
+                (icono.width() + 23) // 24,
+                (icono.height() + 23) // 24
+            )
+
+            if factor > 1:
+                icono = icono.subsample(factor, factor)
 
             self.iconos[nombre_archivo] = icono
 
@@ -238,28 +245,28 @@ class MainView(tk.Frame):
             frame_sidebar,
             "Inicio",
             self.mostrar_inicio,
-            "panel.png"
+            "inicio.png"
         )
 
         self.crear_boton_menu(
             frame_sidebar,
             "Usuarios",
             self.mostrar_usuarios,
-            "users.png"
+            "usuario.png"
         )
 
         self.crear_boton_menu(
             frame_sidebar,
             "Productos",
             self.mostrar_productos,
-            "products.png"
+            "producto.png"
         )
 
         self.crear_boton_menu(
             frame_sidebar,
             "Ventas",
             self.mostrar_ventas,
-            "sales.png"
+            "venta.png"
         )
 
         tk.Frame(
@@ -1052,7 +1059,7 @@ class MainView(tk.Frame):
 
         tk.Label(
             formulario,
-            text="Producto",
+            text="Usuario",
             bg=self.color_panel,
             fg=self.color_texto,
             font=("Arial", 10, "bold")
@@ -1063,23 +1070,53 @@ class MainView(tk.Frame):
             pady=5
         )
 
+        self.actualizar_usuarios_venta()
+
+        combo_usuario = ttk.Combobox(
+            formulario,
+            textvariable=self.venta_usuario_var,
+            state="readonly",
+            width=20,
+            values=list(self.usuarios_venta.keys())
+        )
+
+        combo_usuario.grid(
+            row=0,
+            column=1,
+            padx=(0, 18),
+            pady=5,
+            sticky="ew"
+        )
+
+        tk.Label(
+            formulario,
+            text="Producto",
+            bg=self.color_panel,
+            fg=self.color_texto,
+            font=("Arial", 10, "bold")
+        ).grid(
+            row=0,
+            column=2,
+            padx=(0, 8),
+            pady=5
+        )
+
         self.actualizar_productos_venta()
 
         combo = ttk.Combobox(
             formulario,
             textvariable=self.venta_producto_var,
             state="readonly",
-            width=35,
-            values=list(
-                self.productos_venta.keys()
-            )
+            width=28,
+            values=list(self.productos_venta.keys())
         )
 
         combo.grid(
             row=0,
-            column=1,
+            column=3,
             padx=(0, 18),
-            pady=5
+            pady=5,
+            sticky="ew"
         )
 
         tk.Label(
@@ -1090,7 +1127,7 @@ class MainView(tk.Frame):
             font=("Arial", 10, "bold")
         ).grid(
             row=0,
-            column=2,
+            column=4,
             padx=(0, 8),
             pady=5
         )
@@ -1104,35 +1141,41 @@ class MainView(tk.Frame):
 
         cantidad.grid(
             row=0,
-            column=3,
+            column=5,
             padx=(0, 18),
             pady=5
         )
 
-        self.crear_boton(
+        acciones = tk.Frame(
             formulario,
+            bg=self.color_panel
+        )
+
+        acciones.grid(
+            row=1,
+            column=0,
+            columnspan=6,
+            pady=(8, 0)
+        )
+
+        self.crear_boton(
+            acciones,
             "Registrar venta",
             self.registrar_venta,
             "Accion.TButton",
             "add.png"
-        ).grid(
-            row=0,
-            column=4,
-            pady=5
-        )
+        ).pack(side="left", padx=(0, 8))
 
         self.crear_boton(
-            formulario,
+            acciones,
             "Limpiar",
             self.limpiar_venta,
             "Secundario.TButton",
             "clean.png"
-        ).grid(
-            row=0,
-            column=5,
-            padx=(8, 0),
-            pady=5
-        )
+        ).pack(side="left")
+
+        formulario.grid_columnconfigure(1, weight=1)
+        formulario.grid_columnconfigure(3, weight=2)
 
         listado = self.crear_listado(
             self.contenido,
@@ -1142,18 +1185,30 @@ class MainView(tk.Frame):
         self.tabla_ventas = self.crear_tabla(
             listado,
             (
+                "identificador",
                 "usuario",
                 "producto",
-                "cantidad"
+                "cantidad",
+                "fecha"
             ),
             (
+                "ID",
                 "Usuario",
                 "Producto",
-                "Cantidad"
+                "Cantidad",
+                "Fecha"
             )
         )
 
         self.refrescar_ventas()
+
+    def actualizar_usuarios_venta(self):
+
+        self.usuarios_venta = {}
+
+        for usuario in self.restaurante_servicio.listar_usuarios():
+            etiqueta = usuario.nombre
+            self.usuarios_venta[etiqueta] = str(usuario.id)
 
     def actualizar_productos_venta(self):
 
@@ -1170,9 +1225,8 @@ class MainView(tk.Frame):
                 continue
 
             etiqueta = (
-                f"{producto.codigo} - "
                 f"{producto.nombre} "
-                f"(stock: {producto.stock})"
+                f"(stock: {producto.stock}) — {producto.codigo}"
             )
 
             self.productos_venta[
@@ -1180,6 +1234,28 @@ class MainView(tk.Frame):
             ] = producto.codigo
 
     def registrar_venta(self):
+
+        usuario_seleccionado = self.venta_usuario_var.get().strip()
+
+        if not usuario_seleccionado:
+
+            messagebox.showerror(
+                "Ventas",
+                "Seleccione un usuario."
+            )
+
+            return
+
+        usuario_id = self.usuarios_venta.get(usuario_seleccionado)
+
+        if usuario_id is None:
+
+            messagebox.showerror(
+                "Ventas",
+                "El usuario seleccionado no es válido."
+            )
+
+            return
 
         producto_seleccionado = (
             self.venta_producto_var
@@ -1220,10 +1296,6 @@ class MainView(tk.Frame):
                     "La cantidad debe ser mayor que cero."
                 )
 
-            usuario_id = str(
-                self.usuario_actual.id
-            )
-
             self.restaurante_servicio.registrar_venta(
                 usuario_id,
                 codigo,
@@ -1253,8 +1325,10 @@ class MainView(tk.Frame):
                 f"No se pudo registrar la venta:\n\n{error}"
             )
 
+
     def limpiar_venta(self):
 
+        self.venta_usuario_var.set("")
         self.venta_producto_var.set("")
         self.venta_cantidad_var.set("1")
 
@@ -1263,6 +1337,11 @@ class MainView(tk.Frame):
         self.limpiar_tabla(
             self.tabla_ventas
         )
+
+        usuarios_por_id = {
+            usuario_id: nombre
+            for nombre, usuario_id in self.usuarios_venta.items()
+        }
 
         ventas = (
             self.restaurante_servicio
@@ -1275,9 +1354,14 @@ class MainView(tk.Frame):
                 "",
                 tk.END,
                 values=(
-                    venta.usuario_id,
-                    venta.producto_codigo,
-                    venta.cantidad
+                venta.identificador,
+                usuarios_por_id.get(
+                    str(venta.usuario_id),
+                    venta.usuario_id
+                ),
+                venta.producto_nombre,
+                    venta.cantidad,
+                    venta.fecha
                 )
             )
 

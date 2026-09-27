@@ -4,7 +4,9 @@
 
 Damiana Soledad Constante Gallo
 
-Proyecto de Programación Orientada a Objetos desarrollado para aplicar **componentes, contenedores y gestores de geometría de Tkinter/ttk** sobre una aplicación de restaurante.
+Aplicación de gestión para un restaurante desarrollada en Python utilizando Programación Orientada a Objetos (POO) y Tkinter para la interfaz gráfica.
+
+El proyecto permite gestionar usuarios, productos y ventas mediante una interfaz gráfica sencilla.
 
 ## Objetivo
 
@@ -38,81 +40,65 @@ restaurante_app/
 └── main.py
 ```
 
-## Componentes y contenedores utilizados
-- `Tk` como ventana principal.
-- `Frame` y `LabelFrame` para separar visualmente las zonas.
-- `Notebook` para navegación entre Usuarios y Productos.
-- `Label`, `Entry` y `Button` para formularios y acciones.
-- `Treeview` para visualizar registros.
-- `Scrollbar` para facilitar la consulta de tablas.
-- `messagebox` para informar validaciones y resultados.
-- Gestores `grid` y `pack` para organizar los componentes.
+## Tecnologías utilizadas
 
-Las acciones de los botones utilizan `command=` y delegan las operaciones al `RestauranteServicio`.
+- Python
+- Tkinter
+- Programación Orientada a Objetos (POO)
+- JSON para almacenamiento de información
+- Pillow/PIL para el manejo de imágenes, cuando es necesario
 
-## Sección de Ventas
+## Funcionalidades principales
 
-La interfaz incluye una sección **Ventas**. Permite seleccionar un producto disponible, indicar la cantidad, calcular el total y registrar la venta. Las ventas se guardan en `datos/ventas.json` y se muestran en una tabla. Al registrar una venta, el stock se descuenta desde `RestauranteServicio`.
+### Inicio de sesión
 
-## Operaciones sobre productos
+La aplicación cuenta con un sistema de autenticación de usuarios.
 
-1. **Registrar:** crea un producto y genera su ID automáticamente.
-2. **Cargar / Consultar:** busca un producto por ID y carga sus datos en el formulario.
-3. **Actualizar:** modifica nombre, categoría, precio y stock.
-4. **Eliminar:** elimina un producto después de solicitar confirmación.
-5. **Limpiar:** vacía el formulario.
+- Validación de usuario y contraseña.
+- Uso de los datos almacenados en el archivo JSON correspondiente.
+- Acceso a la aplicación mediante el usuario registrado.
 
-Después de registrar, actualizar o eliminar, la tabla se actualiza para mostrar el resultado.
+### Gestión de usuarios
 
-## Registro de ventas
+Permite trabajar con los usuarios registrados en el sistema.
 
-En el sistema se implementó el registro de ventas de los productos desde el módulo **Ventas** de la interfaz principal. El usuario puede seleccionar un producto, ingresar la cantidad que desea vender y registrar la operación. Antes de guardar la venta, el sistema verifica que el producto exista y que haya suficiente stock disponible. Al realizar una venta correctamente, la cantidad vendida se descuenta automáticamente del stock del producto y la información de la venta se almacena en el archivo `datos/ventas.json`, registrando el usuario, el código del producto y la cantidad vendida.
+- Visualización de usuarios.
+- Identificación mediante un ID.
+- Diferentes usuarios disponibles para realizar ventas.
+- Conservación del usuario administrador.
 
-## Persistencia
+### Gestión de productos
 
-Los datos se almacenan en:
+La aplicación permite administrar los productos del restaurante.
 
-- `datos/productos.json`
-- `datos/usuarios.json`
+Cada producto contiene información como:
 
-Las vistas no manipulan directamente los archivos JSON. La lectura y escritura se realiza mediante `ArchivoServicio`, mientras que las reglas y operaciones del dominio se mantienen en `RestauranteServicio`.
+- Código
+- Nombre
+- Precio
+- Stock
 
-## Inicio de sesión de prueba
+También se controla el stock disponible de cada producto.
 
-- Usuario: `admin`
-- Contraseña: `1234`
+### Registro de ventas
 
+Se implementó y corrigió el módulo de ventas.
 
-## Ejecución
+Cada venta registra:
 
-Requisitos:
+- Identificador de venta
+- Usuario que realiza la venta
+- Nombre del producto
+- Cantidad
+- Fecha
 
-- Python 3.10 o superior.
-- Tkinter instalado (normalmente incluido en Python de escritorio).
+Ejemplo:
 
-Desde la carpeta raíz del proyecto:
-
-```bash
-python main.py
-```
-
-En algunos sistemas puede ser necesario:
-
-```bash
-python3 main.py
-```
-
-## Comprobación funcional
-
-Al ejecutar `main.py` se puede comprobar:
-
-- Inicio de sesión.
-- Navegación por las secciones.
-- Consulta de usuarios.
-- Registro de productos.
-- Consulta/carga por ID.
-- Actualización.
-- Eliminación.
-- Persistencia de los cambios en `productos.json`.
-
-No se implementan `bind()`, doble clic, eventos de teclado/mouse, edición directa de tablas, bases de datos ni autenticación real, porque no forman parte del alcance solicitado para esta semana.
+```json
+{
+    "identificador": "V001",
+    "usuario_id": "2",
+    "producto_nombre": "Coca cola",
+    "cantidad": 1,
+    "fecha": "2026-09-27"
+}
