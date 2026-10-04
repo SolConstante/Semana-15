@@ -23,6 +23,13 @@ class MainView(tk.Frame):
         self.tabla_productos = None
 
         self.tabla_usuarios = None
+        self.usuario_id_entry = None
+        self.usuario_nombre_entry = None
+        self.usuario_login_entry = None
+        self.usuario_password_entry = None
+        self.usuario_rol_combo = None
+        self.usuario_rol_var = tk.StringVar()
+        self.usuario_seleccionado_id = None
 
         self.tabla_ventas = None
         self.venta_usuario_var = tk.StringVar()
@@ -248,12 +255,13 @@ class MainView(tk.Frame):
             "inicio.png"
         )
 
-        self.crear_boton_menu(
-            frame_sidebar,
-            "Usuarios",
-            self.mostrar_usuarios,
-            "usuario.png"
-        )
+        if self.usuario_actual.rol == "Administrador":
+            self.crear_boton_menu(
+                frame_sidebar,
+                "Usuarios",
+                self.mostrar_usuarios,
+                "usuario.png"
+            )
 
         self.crear_boton_menu(
             frame_sidebar,
@@ -524,6 +532,11 @@ class MainView(tk.Frame):
 
     def mostrar_usuarios(self):
 
+        if self.usuario_actual.rol != "Administrador":
+            messagebox.showerror("Usuarios", "Solo un Administrador puede gestionar usuarios.")
+            self.mostrar_inicio()
+            return
+
         self.marcar_seccion("Usuarios")
         self.limpiar_contenido()
 
@@ -531,10 +544,36 @@ class MainView(tk.Frame):
             "Usuarios registrados"
         )
 
-        listado = self.crear_listado(
-            self.contenido,
-            "Usuarios del sistema"
+        formulario = tk.LabelFrame(
+            self.contenido, text="Datos del usuario", bg=self.color_panel,
+            fg=self.color_encabezado, font=("Arial", 10, "bold"), padx=14, pady=12
         )
+        formulario.pack(fill="x", pady=(0, 14))
+        self.usuario_nombre_entry = self.crear_campo(formulario, "Nombre", 0)
+        self.usuario_login_entry = self.crear_campo(formulario, "Usuario", 1)
+        self.usuario_password_entry = self.crear_campo(formulario, "Contraseña", 2)
+        self.usuario_password_entry.configure(show="*")
+        tk.Label(formulario, text="Rol", bg=self.color_panel, fg=self.color_texto,
+                 font=("Arial", 10, "bold")).grid(row=3, column=0, sticky="w", pady=(0, 8), padx=(0, 10))
+        self.usuario_rol_combo = ttk.Combobox(
+            formulario, textvariable=self.usuario_rol_var,
+            values=("Empleado", "Cliente"), state="readonly", width=26
+        )
+        self.usuario_rol_combo.grid(row=3, column=1, sticky="ew", pady=(0, 8))
+        self.usuario_rol_combo.bind("<<ComboboxSelected>>", self.al_seleccionar_rol)
+        formulario.grid_columnconfigure(1, weight=1)
+
+        acciones = tk.Frame(formulario, bg=self.color_panel)
+        acciones.grid(row=4, column=0, columnspan=2, pady=(4, 0))
+        for texto, callback, estilo in (
+            ("Registrar", self.registrar_usuario, "Accion.TButton"),
+            ("Actualizar", self.actualizar_usuario, "Accion.TButton"),
+            ("Eliminar", self.eliminar_usuario, "Eliminar.TButton"),
+            ("Limpiar", self.limpiar_formulario_usuario, "Secundario.TButton"),
+        ):
+            self.crear_boton(acciones, texto, callback, estilo).pack(side="left", padx=4)
+
+        listado = self.crear_listado(self.contenido, "Usuarios del sistema")
 
         self.tabla_usuarios = self.crear_tabla(
             listado,
@@ -554,6 +593,98 @@ class MainView(tk.Frame):
 
         self.refrescar_usuarios()
 
+        self.tabla_usuarios.bind("<<TreeviewSelect>>", self.al_seleccionar_usuario)
+        for widget in (self.usuario_nombre_entry, self.usuario_login_entry,
+                       self.usuario_password_entry, self.usuario_rol_combo, self.tabla_usuarios):
+            widget.bind("<Return>", self.al_presionar_return)
+            widget.bind("<Escape>", self.al_presionar_escape)
+        self.usuario_nombre_entry.focus_set()
+
+    def al_seleccionar_usuario(self, event=None):
+        seleccion = self.tabla_usuarios.selection() if self.tabla_usuarios else ()
+        if not seleccion:
+            return
+        identificador = self.tabla_usuarios.item(seleccion[0], "values")[0]
+        usuario = self.restaurante_servicio.buscar_usuario_por_id(identificador)
+        if usuario is None:
+            return
+        self.usuario_seleccionado_id = str(usuario.id)
+        self.usuario_nombre_entry.delete(0, tk.END)
+        self.usuario_nombre_entry.insert(0, usuario.nombre)
+        self.usuario_login_entry.delete(0, tk.END)
+        self.usuario_login_entry.insert(0, usuario.usuario)
+        self.usuario_password_entry.delete(0, tk.END)
+        self.usuario_rol_var.set(usuario.rol if usuario.rol in ("Empleado", "Cliente") else "")
+
+    def al_seleccionar_rol(self, event=None):
+        """Refleja el cambio y actualiza el resumen visible de la aplicación."""
+        self.actualizar_barra_estado()
+
+    def al_presionar_return(self, event=None):
+        self.registrar_usuario()
+        return "break"
+
+    def al_presionar_escape(self, event=None):
+        self.limpiar_formulario_usuario()
+        return "break"
+
+    def limpiar_formulario_usuario(self):
+        for entrada in (self.usuario_nombre_entry, self.usuario_login_entry, self.usuario_password_entry):
+            if entrada is not None:
+                entrada.delete(0, tk.END)
+        self.usuario_rol_var.set("")
+        self.usuario_seleccionado_id = None
+        if self.tabla_usuarios is not None:
+            seleccion = self.tabla_usuarios.selection()
+            if seleccion:
+                self.tabla_usuarios.selection_remove(*seleccion)
+            self.tabla_usuarios.focus("")
+
+    def registrar_usuario(self):
+        try:
+            self.restaurante_servicio.registrar_usuario(
+                self.usuario_nombre_entry.get(), self.usuario_login_entry.get(),
+                self.usuario_password_entry.get(), self.usuario_rol_var.get(), self.usuario_actual
+            )
+            self.refrescar_usuarios()
+            self.limpiar_formulario_usuario()
+            messagebox.showinfo("Usuarios", "Usuario registrado correctamente.")
+        except ValueError as error:
+            messagebox.showerror("Usuarios", str(error))
+
+    def actualizar_usuario(self):
+        if self.usuario_seleccionado_id is None:
+            messagebox.showwarning("Usuarios", "Seleccione un usuario para actualizar.")
+            return
+        try:
+            self.restaurante_servicio.actualizar_usuario(
+                self.usuario_seleccionado_id, self.usuario_nombre_entry.get(),
+                self.usuario_login_entry.get(), self.usuario_password_entry.get(),
+                self.usuario_rol_var.get(), self.usuario_actual
+            )
+            self.refrescar_usuarios()
+            self.limpiar_formulario_usuario()
+            messagebox.showinfo("Usuarios", "Usuario actualizado correctamente.")
+        except ValueError as error:
+            messagebox.showerror("Usuarios", str(error))
+
+    def eliminar_usuario(self):
+        if self.usuario_seleccionado_id is None:
+            messagebox.showwarning("Usuarios", "Seleccione un usuario para eliminar.")
+            return
+        if self.usuario_seleccionado_id == str(self.usuario_actual.id):
+            messagebox.showwarning("Usuarios", "No puede eliminar su propia cuenta Administrador.")
+            return
+        if not messagebox.askyesno("Confirmar eliminación", "¿Desea eliminar el usuario seleccionado?"):
+            return
+        try:
+            self.restaurante_servicio.eliminar_usuario(self.usuario_seleccionado_id, self.usuario_actual)
+            self.refrescar_usuarios()
+            self.limpiar_formulario_usuario()
+            messagebox.showinfo("Usuarios", "Usuario eliminado correctamente.")
+        except ValueError as error:
+            messagebox.showerror("Usuarios", str(error))
+
     def refrescar_usuarios(self):
 
         self.limpiar_tabla(
@@ -566,7 +697,6 @@ class MainView(tk.Frame):
         )
 
         for usuario in usuarios:
-
             self.tabla_usuarios.insert(
                 "",
                 tk.END,
